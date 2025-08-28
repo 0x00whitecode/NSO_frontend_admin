@@ -72,13 +72,14 @@ const roles = [
   'supervisor'
 ];
 
-const nigerianStates = [
-  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
-  'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe',
-  'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
-  'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau',
-  'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
-];
+// Nigerian states for future use
+// const nigerianStates = [
+//   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
+//   'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'FCT', 'Gombe',
+//   'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara',
+//   'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau',
+//   'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+// ];
 
 export default function ActivationKeys() {
   const [keys, setKeys] = useState<ActivationKey[]>([]);
@@ -279,7 +280,7 @@ export default function ActivationKeys() {
   }, [fetchKeys]);
 
   // Handle pagination change
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   };
 
@@ -413,32 +414,7 @@ export default function ActivationKeys() {
     handleMenuClose();
   };
 
-  // Copy key to clipboard
-  const handleCopyKey = (key: string) => {
-    if (!key) {
-      setSnackbar({
-        open: true,
-        message: 'No key to copy',
-        severity: 'warning'
-      });
-      return;
-    }
-    
-    navigator.clipboard.writeText(key).then(() => {
-      setSnackbar({
-        open: true,
-        message: 'Activation key copied to clipboard',
-        severity: 'success'
-      });
-    }).catch((err) => {
-      console.error('Failed to copy to clipboard:', err);
-      setSnackbar({
-        open: true,
-        message: 'Failed to copy to clipboard',
-        severity: 'error'
-      });
-    });
-  };
+  // Removed unused handleCopyKey function - using handleCopyToClipboard instead
 
   // Enhanced copy functionality with fallback
   const handleCopyToClipboard = async (text: string, label: string) => {
@@ -465,6 +441,8 @@ export default function ActivationKeys() {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
+        // Using deprecated execCommand as fallback for older browsers
+        // eslint-disable-next-line deprecation/deprecation
         document.execCommand('copy');
         textArea.remove();
       }
