@@ -45,23 +45,16 @@ import ActivationKeyDisplay from '../components/common/ActivationKeyDisplay';
 import { ActivationKey, apiService } from '../services/api';
 
 interface CreateActivationKeyRequest {
-  assignedTo: {
-    email: string;
+  userDetails: {
     fullName: string;
+    email: string;
+    phone?: string;
     role: string;
-    facility: string;
-    state: string;
-    contactInfo: string;
-    location: {
-      latitude: number;
-      longitude: number;
-      address: string;
-    };
+    facility?: string;
+    state?: string;
   };
-  validUntil: string;
-  maxUses: number;
+  expiresAt: string;
   notes?: string;
-  requireLocation: boolean;
 }
 
 const roles = [
@@ -104,23 +97,16 @@ export default function ActivationKeys() {
 
   // Form state for creating new keys
   const [formData, setFormData] = useState<CreateActivationKeyRequest>({
-    assignedTo: {
-      email: '',
+    userDetails: {
       fullName: '',
+      email: '',
+      phone: '',
       role: '',
       facility: '',
-      state: '',
-      contactInfo: '',
-      location: {
-        latitude: 0,
-        longitude: 0,
-        address: ''
-      }
+      state: ''
     },
-    validUntil: '',
-    maxUses: 1,
-    notes: '',
-    requireLocation: true
+    expiresAt: '',
+    notes: ''
   });
 
   // Form validation errors
@@ -130,86 +116,48 @@ export default function ActivationKeys() {
   const buildErrors = (f: CreateActivationKeyRequest): { errors: any, valid: boolean } => {
     const errors: any = {};
 
-    if (!f.assignedTo.fullName.trim()) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.fullName = 'Full name is required';
+    if (!f.userDetails.fullName.trim()) {
+      if (!errors.userDetails) errors.userDetails = {};
+      errors.userDetails.fullName = 'Full name is required';
     }
 
-    if (!f.assignedTo.email.trim()) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(f.assignedTo.email)) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.email = 'Email is invalid';
+    if (!f.userDetails.email.trim()) {
+      if (!errors.userDetails) errors.userDetails = {};
+      errors.userDetails.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(f.userDetails.email)) {
+      if (!errors.userDetails) errors.userDetails = {};
+      errors.userDetails.email = 'Email is invalid';
     }
 
-    if (!f.assignedTo.role) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.role = 'Role is required';
+    if (!f.userDetails.role) {
+      if (!errors.userDetails) errors.userDetails = {};
+      errors.userDetails.role = 'Role is required';
     }
 
-    if (!f.assignedTo.facility.trim()) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.facility = 'Facility is required';
-    }
-
-    if (!f.assignedTo.state) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.state = 'State is required';
-    }
-
-    if (!f.assignedTo.contactInfo.trim()) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      errors.assignedTo.contactInfo = 'Contact information is required';
-    }
-
-    if (!f.validUntil) {
-      errors.validUntil = 'Valid until date is required';
-    }
-
-    if (f.requireLocation && (!f.assignedTo.location.latitude || !f.assignedTo.location.longitude)) {
-      if (!errors.assignedTo) errors.assignedTo = {};
-      if (!errors.assignedTo.location) errors.assignedTo.location = {};
-      errors.assignedTo.location.latitude = 'Location coordinates are required';
+    if (!f.expiresAt) {
+      errors.expiresAt = 'Expiration date is required';
+    } else {
+      const expirationDate = new Date(f.expiresAt);
+      const now = new Date();
+      if (expirationDate <= now) {
+        errors.expiresAt = 'Expiration date must be in the future';
+      }
     }
 
     const valid = Object.keys(errors).length === 0;
     return { errors, valid };
   };
 
-  // Get current location
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData(prev => ({
-            ...prev,
-            assignedTo: {
-              ...prev.assignedTo,
-              location: {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                address: prev.assignedTo.location.address
-              }
-            }
-          }));
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setSnackbar({
-            open: true,
-            message: 'Failed to get current location. Please enter coordinates manually.',
-            severity: 'warning'
-          });
-        }
-      );
-    } else {
-      setSnackbar({
-        open: true,
-        message: 'Geolocation is not supported by this browser.',
-        severity: 'warning'
-      });
-    }
+  // Set default expiration date (30 days from now)
+  const setDefaultExpirationDate = () => {
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+    const formattedDate = defaultDate.toISOString().split('T')[0];
+
+    setFormData(prev => ({
+      ...prev,
+      expiresAt: formattedDate
+    }));
   };
 
   // Fetch activation keys
@@ -227,24 +175,24 @@ export default function ActivationKeys() {
 
       if (response.success && response.data) {
         // Transform backend data to match frontend interface
-        const transformedKeys = response.data.activationKeys.map((backendKey: any) => ({
+        const transformedKeys = response.data.keys.map((backendKey: any) => ({
           keyId: backendKey._id,
           activationKey: backendKey.key,
           shortCode: backendKey.key?.substring(0, 4) || 'N/A',
-          userId: backendKey.activatedBy?._id || backendKey.assignedTo?.userId || 'N/A',
-          deviceId: backendKey.deviceId || 'Not activated',
-          role: backendKey.assignedTo?.role || 'N/A',
-          facility: backendKey.assignedTo?.facility || 'N/A',
-          state: backendKey.assignedTo?.state || 'N/A',
-          validityMonths: 12, // Default value
+          userId: backendKey.userDetails?.email || 'N/A',
+          deviceId: backendKey.status === 'used' ? 'Activated' : 'Not activated',
+          role: backendKey.userDetails?.role || 'N/A',
+          facility: backendKey.userDetails?.facility || 'N/A',
+          state: backendKey.userDetails?.state || 'N/A',
+          validityMonths: Math.ceil((new Date(backendKey.expiresAt).getTime() - new Date(backendKey.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30)),
           issuedAt: backendKey.createdAt,
-          expiresAt: backendKey.validUntil,
+          expiresAt: backendKey.expiresAt,
           status: backendKey.status,
-          isUsed: backendKey.usageCount > 0,
-          usedAt: backendKey.activatedAt,
+          isUsed: backendKey.status === 'used',
+          usedAt: backendKey.usedAt,
           createdBy: {
             adminId: backendKey.createdBy?._id || 'N/A',
-            adminName: backendKey.createdBy?.firstName + ' ' + backendKey.createdBy?.lastName || 'Admin',
+            adminName: backendKey.createdBy?.username || 'Admin',
             adminEmail: backendKey.createdBy?.email || 'admin@nso.gov.ng'
           },
           notes: backendKey.notes || '',
@@ -330,23 +278,16 @@ export default function ActivationKeys() {
         
         // Reset form and close dialog
         setFormData({
-          assignedTo: {
-            email: '',
+          userDetails: {
             fullName: '',
+            email: '',
+            phone: '',
             role: '',
             facility: '',
-            state: '',
-            contactInfo: '',
-            location: {
-              latitude: 0,
-              longitude: 0,
-              address: ''
-            }
+            state: ''
           },
-          validUntil: '',
-          maxUses: 1,
-          notes: '',
-          requireLocation: true
+          expiresAt: '',
+          notes: ''
         });
         setIsCreateDialogOpen(false);
         

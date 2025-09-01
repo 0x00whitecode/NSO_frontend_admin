@@ -483,19 +483,19 @@ class ApiService {
   }
 
   async createActivationKey(keyData: {
-    assignedTo: {
-      email: string;
+    userDetails: {
       fullName: string;
+      email: string;
+      phone?: string;
       role: string;
       facility?: string;
       state?: string;
     };
-    validUntil: string;
-    maxUses?: number;
+    expiresAt: string;
     notes?: string;
   }) {
     try {
-      console.log('Creating activation key with data:', keyData);
+      console.log('Creating 12-digit activation key with data:', keyData);
       const response = await apiClient.post('/admin/activation-keys', keyData);
       console.log('Activation key creation response:', response.data);
       return response.data;
