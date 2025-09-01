@@ -114,6 +114,12 @@ const ActivationKeyDisplay: React.FC<ActivationKeyDisplayProps> = ({
 
   const maskKey = (key: string) => {
     if (!key) return '';
+    // For 12-character keys (XXXX-XXXX-XXXX), show first and last group
+    if (key.length === 14 && key.includes('-')) {
+      const parts = key.split('-');
+      return `${parts[0]}-****-${parts[2]}`;
+    }
+    // Fallback for other formats
     if (key.length <= 8) return '*'.repeat(key.length);
     return key.substring(0, 4) + '*'.repeat(key.length - 8) + key.substring(key.length - 4);
   };
