@@ -383,7 +383,7 @@ export default function ActivationKeys() {
         textArea.focus();
         textArea.select();
         // Using deprecated execCommand as fallback for older browsers
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line
         document.execCommand('copy');
         textArea.remove();
       }
@@ -671,13 +671,13 @@ export default function ActivationKeys() {
                 <TextField
                   fullWidth
                   label="Full Name"
-                  value={formData.assignedTo.fullName}
+                  value={formData.userDetails.fullName}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    assignedTo: { ...prev.assignedTo, fullName: e.target.value }
+                    userDetails: { ...prev.userDetails, fullName: e.target.value }
                   }))}
-                  error={!!formErrors.assignedTo?.fullName}
-                  helperText={formErrors.assignedTo?.fullName}
+                  error={!!formErrors.userDetails?.fullName}
+                  helperText={formErrors.userDetails?.fullName}
                   required
                 />
               </Grid>
@@ -687,35 +687,35 @@ export default function ActivationKeys() {
                   fullWidth
                   label="Email"
                   type="email"
-                  value={formData.assignedTo.email}
+                  value={formData.userDetails.email}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    assignedTo: { ...prev.assignedTo, email: e.target.value }
+                    userDetails: { ...prev.userDetails, email: e.target.value }
                   }))}
-                  error={!!formErrors.assignedTo?.email}
-                  helperText={formErrors.assignedTo?.email}
+                  error={!!formErrors.userDetails?.email}
+                  helperText={formErrors.userDetails?.email}
                   required
                 />
               </Grid>
               
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth required error={!!formErrors.assignedTo?.role}>
+                <FormControl fullWidth required error={!!formErrors.userDetails?.role}>
                   <InputLabel>Role</InputLabel>
                   <Select
-                    value={formData.assignedTo.role}
+                    value={formData.userDetails.role}
                     label="Role"
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
-                      assignedTo: { ...prev.assignedTo, role: e.target.value }
+                      userDetails: { ...prev.userDetails, role: e.target.value as string }
                     }))}
                   >
                     {roles.map(role => (
                       <MenuItem key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</MenuItem>
                     ))}
                   </Select>
-                  {formErrors.assignedTo?.role && (
+                  {formErrors.userDetails?.role && (
                     <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                      {formErrors.assignedTo.role}
+                      {formErrors.userDetails.role}
                     </Typography>
                   )}
                 </FormControl>
@@ -725,13 +725,13 @@ export default function ActivationKeys() {
                 <TextField
                   fullWidth
                   label="Facility"
-                  value={formData.assignedTo.facility}
+                  value={formData.userDetails.facility}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    assignedTo: { ...prev.assignedTo, facility: e.target.value }
+                    userDetails: { ...prev.userDetails, facility: e.target.value }
                   }))}
-                  error={!!formErrors.assignedTo?.facility}
-                  helperText={formErrors.assignedTo?.facility}
+                  error={!!formErrors.userDetails?.facility}
+                  helperText={formErrors.userDetails?.facility}
                   required
                 />
               </Grid>
@@ -740,13 +740,13 @@ export default function ActivationKeys() {
                 <TextField
                   fullWidth
                   label="State"
-                  value={formData.assignedTo.state}
+                  value={formData.userDetails.state}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    assignedTo: { ...prev.assignedTo, state: e.target.value }
+                    userDetails: { ...prev.userDetails, state: e.target.value }
                   }))}
-                  error={!!formErrors.assignedTo?.state}
-                  helperText={formErrors.assignedTo?.state}
+                  error={!!formErrors.userDetails?.state}
+                  helperText={formErrors.userDetails?.state}
                   required
                 />
               </Grid>
@@ -754,15 +754,12 @@ export default function ActivationKeys() {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Contact Information"
-                  value={formData.assignedTo.contactInfo}
+                  label="Phone (optional)"
+                  value={formData.userDetails.phone || ''}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    assignedTo: { ...prev.assignedTo, contactInfo: e.target.value }
+                    userDetails: { ...prev.userDetails, phone: e.target.value }
                   }))}
-                  error={!!formErrors.assignedTo?.contactInfo}
-                  helperText={formErrors.assignedTo?.contactInfo}
-                  required
                 />
               </Grid>
 
@@ -770,11 +767,8 @@ export default function ActivationKeys() {
                  <FormControlLabel
                    control={
                      <Switch
-                       checked={formData.requireLocation}
-                       onChange={(e) => setFormData(prev => ({
-                         ...prev,
-                         requireLocation: e.target.checked
-                       }))}
+                       checked={false}
+                       onChange={() => {}}
                        name="requireLocation"
                        color="primary"
                      />
@@ -788,104 +782,33 @@ export default function ActivationKeys() {
                    fullWidth
                    variant="outlined"
                    startIcon={<LocationIcon />}
-                   onClick={getCurrentLocation}
-                   disabled={!formData.requireLocation}
+                   onClick={() => {}}
+                   disabled
                  >
                    Get Current Location
                  </Button>
                </Grid>
 
-              {formData.requireLocation && (
-                <>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Latitude"
-                      type="number"
-                      value={formData.assignedTo.location.latitude}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        assignedTo: {
-                          ...prev.assignedTo,
-                          location: { ...prev.assignedTo.location, latitude: parseFloat(e.target.value) || 0 }
-                        }
-                      }))}
-                      error={!!formErrors.assignedTo?.location?.latitude}
-                      helperText={formErrors.assignedTo?.location?.latitude}
-                      InputProps={{
-                        endAdornment: <LocationIcon sx={{ mr: 1 }} />
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Longitude"
-                      type="number"
-                      value={formData.assignedTo.location.longitude}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        assignedTo: {
-                          ...prev.assignedTo,
-                          location: { ...prev.assignedTo.location, longitude: parseFloat(e.target.value) || 0 }
-                        }
-                      }))}
-                      error={!!formErrors.assignedTo?.location?.longitude}
-                      helperText={formErrors.assignedTo?.location?.longitude}
-                      InputProps={{
-                        endAdornment: <LocationIcon sx={{ mr: 1 }} />
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Address (Optional)"
-                      value={formData.assignedTo.location.address}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        assignedTo: {
-                          ...prev.assignedTo,
-                          location: { ...prev.assignedTo.location, address: e.target.value }
-                        }
-                      }))}
-                      placeholder="e.g., 123 Main St, Abuja"
-                    />
-                  </Grid>
-                </>
-              )}
+
               
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Valid Until"
+                  label="Expires At"
                   type="date"
-                  value={formData.validUntil}
+                  value={formData.expiresAt}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    validUntil: e.target.value
+                    expiresAt: e.target.value
                   }))}
-                  error={!!formErrors.validUntil}
-                  helperText={formErrors.validUntil}
+                  error={!!formErrors.expiresAt}
+                  helperText={formErrors.expiresAt}
                   required
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Max Uses"
-                  type="number"
-                  value={formData.maxUses}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    maxUses: parseInt(e.target.value) || 1
-                  }))}
-                  required
-                  inputProps={{ min: 1, max: 10 }}
-                />
-              </Grid>
+
               
               <Grid item xs={12}>
                 <TextField
